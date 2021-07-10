@@ -40,6 +40,10 @@ const useLoginEffect = showToast => {
     password: ''
   })
   const handleLogin = async () => {
+    const { username, password } = userData
+    if (!(username && password)) {
+      return showToast('用户名或密码格式错误')
+    }
     const url = '/api/user/login'
     try {
       const result = await post(url, {

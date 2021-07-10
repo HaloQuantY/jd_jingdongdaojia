@@ -49,6 +49,10 @@ const useLogupEffect = showToast => {
     affirm: ''
   })
   const handleLogup = async () => {
+    const { username, password } = userData
+    if (!(username && password)) {
+      return showToast('用户名或密码格式错误')
+    }
     try {
       if (userData.password !== userData.affirm) {
         return showToast('两次输入密码不一致')
