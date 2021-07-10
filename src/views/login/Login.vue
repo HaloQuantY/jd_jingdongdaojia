@@ -33,42 +33,55 @@ import { useRouter } from 'vue-router'
 import { post } from '@/utils/request.js'
 import Toast, { useToastEffect } from '@/components/Toast/Toast.vue'
 
+const useLoginEffect = showToast => {
+  const router = useRouter()
+  const userData = reactive({
+    username: '',
+    password: ''
+  })
+  const handleLogin = async () => {
+    const url = '/api/user/login'
+    try {
+      const result = await post(url, {
+        username: userData.username,
+        password: userData.password
+      })
+      if (result.error === 0) {
+        localStorage.setItem('ifLogin', true)
+        router.push({ name: 'Home' })
+      } else {
+        showToast('登录失败')
+      }
+    } catch (e) {
+      showToast('请求失败')
+      console.log(e)
+    }
+  }
+  return {
+    userData,
+    handleLogin
+  }
+}
+
+const useLogupEffect = () => {
+  const router = useRouter()
+  const handleLogup = () => {
+    router.push({ name: 'Logup' })
+  }
+  return {
+    handleLogup
+  }
+}
+
 export default {
   name: 'Login',
   components: {
     Toast
   },
   setup () {
-    const router = useRouter()
     const { ToastData, showToast } = useToastEffect()
-
-    const userData = reactive({
-      username: '',
-      password: ''
-    })
-
-    const handleLogin = async () => {
-      const url = '/api/user/login'
-      try {
-        const result = await post(url, {
-          username: userData.username,
-          password: userData.password
-        })
-        if (result.error === 0) {
-          localStorage.setItem('ifLogin', true)
-          router.push({ name: 'Home' })
-        } else {
-          showToast('登录失败')
-        }
-      } catch (e) {
-        showToast('请求失败')
-        console.log(e)
-      }
-    }
-
-    const handleLogup = () => {
-      router.push({ name: 'Logup' })
-    }
+    const { userData, handleLogin } = useLoginEffect(showToast)
+    const { handleLogup } = useLogupEffect()
 
     return {
       handleLogin,

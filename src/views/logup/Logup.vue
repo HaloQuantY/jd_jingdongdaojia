@@ -9,7 +9,8 @@
       <input
         type="text"
         class="logup__input__content"
-        placeholder="请输入手机号"
+        placeholder="请输入用户名"
+        v-model="userData.username"
       />
     </div>
     <div class="logup__input">
@@ -17,6 +18,7 @@
         type="password"
         class="logup__input__content"
         placeholder="请输入密码"
+        v-model="userData.password"
       />
     </div>
     <div class="logup__input">
@@ -24,25 +26,78 @@
         type="password"
         class="logup__input__content"
         placeholder="确认密码"
+        v-model="userData.affirm"
       />
     </div>
-    <div class="logup__button">注册</div>
+    <div class="logup__button" @click="handleLogup">注册</div>
     <div class="logup__login" @click="handleLogin">已有账号去登陆</div>
+    <Toast v-if="ToastData.showToast" :message="ToastData.message" />
   </div>
 </template>
 
 <script>
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { post } from '@/utils/request.js'
+import Toast, { useToastEffect } from '@/components/Toast/Toast.vue'
+
+const useLogupEffect = showToast => {
+  const router = useRouter()
+  const userData = reactive({
+    username: '',
+    password: '',
+    affirm: ''
+  })
+  const handleLogup = async () => {
+    try {
+      if (userData.password !== userData.affirm) {
+        return showToast('两次输入密码不一致')
+      }
+      const result = await post('/api/user/logup', {
+        username: userData.username,
+        password: userData.password
+      })
+      if (result.error === 0) {
+        localStorage.setItem('ifLogin', true)
+        router.push({ name: 'Home' })
+      } else {
+        showToast('注册失败')
+      }
+    } catch (e) {
+      showToast('连接失败')
+    }
+  }
+  return {
+    userData,
+    handleLogup
+  }
+}
+
+const useLoginEffect = () => {
+  const router = useRouter()
+  const handleLogin = () => {
+    router.push({ name: 'Login' })
+  }
+  return {
+    handleLogin
+  }
+}
 
 export default {
   name: 'logup',
+  components: {
+    Toast
+  },
   setup () {
-    const router = useRouter()
-    const handleLogin = () => {
-      router.push({ name: 'Login' })
-    }
+    const { ToastData, showToast } = useToastEffect()
+    const { userData, handleLogup } = useLogupEffect(showToast)
+    const { handleLogin } = useLoginEffect()
+
     return {
-      handleLogin
+      userData,
+      ToastData,
+      handleLogin,
+      handleLogup
     }
   }
 }
