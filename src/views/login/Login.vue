@@ -9,7 +9,8 @@
       <input
         type="text"
         class="login__input__content"
-        placeholder="请输入手机号"
+        placeholder="请输入用户名"
+        v-model="userData.username"
       />
     </div>
     <div class="login__input">
@@ -17,30 +18,63 @@
         type="password"
         class="login__input__content"
         placeholder="请输入密码"
+        v-model="userData.password"
       />
     </div>
     <div class="login__button" @click="handleLogin">登录</div>
     <div class="login__logup" @click="handleLogup">立即注册</div>
+    <Toast v-if="ToastData.showToast" :message="ToastData.message" />
   </div>
 </template>
 
 <script>
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { post } from '@/utils/request.js'
+import Toast, { useToastEffect } from '@/components/Toast/Toast.vue'
 
 export default {
   name: 'Login',
+  components: {
+    Toast
+  },
   setup () {
     const router = useRouter()
-    const handleLogin = () => {
-      localStorage.setItem('ifLogin', true)
-      router.push({ name: 'Home' })
+    const { ToastData, showToast } = useToastEffect()
+
+    const userData = reactive({
+      username: '',
+      password: ''
+    })
+
+    const handleLogin = async () => {
+      const url = '/api/user/login'
+      try {
+        const result = await post(url, {
+          username: userData.username,
+          password: userData.password
+        })
+        if (result.error === 0) {
+          localStorage.setItem('ifLogin', true)
+          router.push({ name: 'Home' })
+        } else {
+          showToast('登录失败')
+        }
+      } catch (e) {
+        showToast('请求失败')
+        console.log(e)
+      }
     }
+
     const handleLogup = () => {
       router.push({ name: 'Logup' })
     }
+
     return {
       handleLogin,
-      handleLogup
+      handleLogup,
+      userData,
+      ToastData
     }
   }
 }
